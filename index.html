@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Samvaad — Society Complaint Triage (Resident)</title>
+<meta name="description" content="Report a housing society complaint in English, Hindi or Hinglish. It is sorted, prioritised and tracked until resolved." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 12h14M9 16h10M9 20h6' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body data-page="resident">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="brand" href="index.html" aria-label="Samvaad home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="22" height="22"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M9 11.5h14M9 16h10M9 20.5h6" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/></svg>
+      </span>
+      <span class="brand-text">
+        <strong>Samvaad</strong>
+        <small>Society Complaint Triage</small>
+      </span>
+    </a>
+
+    <nav class="role-switch" aria-label="Switch view">
+      <a href="index.html" class="role-link is-active">Resident</a>
+      <a href="dashboard.html" class="role-link" id="link-committee">Committee</a>
+    </nav>
+
+    <div class="appbar-actions">
+      <button class="icon-btn" id="btn-theme" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <svg class="ico-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="offline-bar" id="offline-bar" hidden>You are offline — your complaint is saved on this device and will be sent automatically once you reconnect.</div>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <span class="pill pill-soft">Resident portal</span>
+    <h1>Report a society issue — <span class="hl">no forms needed</span></h1>
+    <p class="hero-sub">Type or speak your problem in Hinglish, Hindi or English — the way you speak at home. The committee sees it already sorted by urgency.</p>
+  </section>
+  <section class="grid-2">
+    <div class="card card-pad" id="submit-card">
+      <div class="card-head">
+        <h2>What is the problem?</h2>
+        <span id="ai-state-badge" hidden aria-hidden="true"></span>
+      </div>
+
+      <div class="identity">
+        <label class="field field-sm">
+          <span>Flat / House no. *</span>
+          <input id="in-flat" type="text" placeholder="e.g. B-402" autocomplete="off"  required />
+        </label>
+        <label class="field field-sm">
+          <span>Your name *</span>
+          <input id="in-name" type="text" placeholder="e.g. Rehana" autocomplete="off"  required />
+        </label>
+        <label class="field field-sm">
+          <span>Phone no. *</span>
+          <input id="in-phone" type="tel" placeholder="10-digit number" autocomplete="off"  required />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="lang-note">Aap apni samasya Hinglish, Hindi ya English mein likh ya bol sakte hain.</span>
+        <div class="composer">
+          <textarea id="in-text" rows="4" placeholder="Likhiye jo dikkat hai… e.g. &quot;3 din se paani nahi aa raha, tap bilkul sookha hai&quot;" aria-label="Describe your problem — Hinglish, Hindi ya English"></textarea>
+          <button class="mic-btn" id="btn-mic" type="button" title="Speak instead of typing" aria-label="Speak instead of typing">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>
+          </button>
+        </div>
+      </label>
+
+      <div class="row-between">
+        <span class="hint" id="char-hint"></span>
+        <button class="btn btn-primary btn-lg" id="btn-submit" type="button">
+          <span class="btn-label">Send complaint</span>
+          <span class="spinner" hidden></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <div class="card-head">
+        <h2>My complaints</h2>
+        <button class="btn btn-ghost btn-sm" id="btn-track" type="button">Refresh</button>
+      </div>
+      <p class="muted small">Enter the flat number you used while reporting to see live status.</p>
+      <div class="inline-form">
+        <input id="in-track" type="text" placeholder="Flat no. e.g. B-402"  />
+        <button class="btn btn-secondary" id="btn-track-go" type="button">Track</button>
+      </div>
+      <div id="track-results" class="stack" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="receipt-wrap" class="stack" hidden></section>
+
+  <section class="card card-pad how">
+    <h2>How your complaint is handled</h2>
+    <ol class="steps">
+      <li><strong>Sorted instantly</strong><span>Your message is read, the category (Water, Lift, Parking, Cleaning, Security) and urgency are decided, and a one-line summary is written.</span></li>
+      <li><strong>Grouped with duplicates</strong><span>If five neighbours report the same water problem, the committee sees one issue — not five messages.</span></li>
+      <li><strong>Committee acts</strong><span>Volunteers move it through New → Assigned → In Progress → Resolved and reply in your language.</span></li>
+    </ol>
+    <p class="muted small no-margin">Works on slow internet: your complaint is stored on this device first and synced automatically.</p>
+  </section>
+
+</main>
+<footer class="site-foot">
+  <span>Samvaad · Society Complaint Triage · ZEPHYR ’26</span>
+</footer>
+
+<div class="modal-backdrop" id="modal-gate" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-gate-title">
+    <h3 id="modal-gate-title">Committee access</h3>
+    <p class="muted small">This area is only for committee members. Enter the committee password to continue.</p>
+    <label class="field">
+      <span>Password</span>
+      <input id="in-gate" type="password" placeholder="Committee password" autocomplete="off" />
+    </label>
+    <div class="row-between">
+      <span></span>
+      <div class="row-gap">
+        <button class="btn btn-secondary" data-close type="button">Cancel</button>
+        <button class="btn btn-primary" id="btn-gate-go" type="button">Open board</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-help" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-help-title">
+    <h3 id="modal-help-title">Help</h3>
+    <ul class="help-list">
+      <li><strong>Track my complaints</strong><span>Enter your flat number and press Track.</span></li>
+      <li><strong>Send complaint</strong><span>Type your message and press the Send button.</span></li>
+      <li><strong>Speak</strong><span>Tap the mic button and speak in Hinglish, Hindi or English.</span></li>
+    </ul>
+    <div class="row-between">
+      <span></span>
+      <button class="btn btn-primary" data-close type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="js/config.example.js"></script>
+<script src="js/config.js" onerror="window.__noLocalConfig=true"></script>
+<script src="vendor/firebase-app-compat.js" onerror="window.__noFirebaseSdk=true"></script>
+<script src="vendor/firebase-firestore-compat.js" onerror="window.__noFirebaseSdk=true"></script>
+<script src="js/ui.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/resident.js"></script>
+
+</body>
+</html>

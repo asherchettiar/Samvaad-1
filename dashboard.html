@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Samvaad — Committee Triage Board</title>
+<meta name="description" content="Complaint board for housing society committee volunteers." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 12h14M9 16h10M9 20h6' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body data-page="committee">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="brand" href="index.html" aria-label="Samvaad home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="22" height="22"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M9 11.5h14M9 16h10M9 20.5h6" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/></svg>
+      </span>
+      <span class="brand-text">
+        <strong>Samvaad</strong>
+        <small>Society Complaint Triage</small>
+      </span>
+    </a>
+
+    <nav class="role-switch" aria-label="Switch view">
+      <a href="index.html" class="role-link">Resident</a>
+      <a href="dashboard.html" class="role-link is-active">Committee</a>
+    </nav>
+
+    <div class="appbar-actions">
+      <button class="icon-btn" id="btn-card" type="button" title="Add complaint manually" aria-label="Add complaint">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h13a2 2 0 0 1 2 2v8H4z"/><path d="M4 20h9M18 3.8v4M16 5.8h4"/></svg>
+      </button>
+      <button class="btn btn-primary btn-sm" id="btn-add" type="button">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        Paste complaint
+      </button>
+      <button class="icon-btn" id="btn-theme" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <svg class="ico-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="offline-bar" id="offline-bar" hidden>You are offline — changes are saved locally and will sync automatically when the connection returns.</div>
+</header>
+<main class="page page-wide">
+
+  <section class="dash-head">
+    <div>
+      <span class="pill pill-soft">Committee board</span>
+      <h1>Triage board</h1>
+      <p class="muted">Same issues are grouped automatically, so 100 flats never means 100 messages. Sorted by urgency, oldest first.</p>
+    </div>
+    <div class="dash-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-demo" type="button" title="Load realistic demo data">Load demo data</button>
+      <button class="btn btn-ghost btn-sm" id="btn-export" type="button" title="Export all data as JSON">Export</button>
+      <button class="btn btn-ghost btn-sm danger-text" id="btn-reset" type="button" title="Delete all local data">Reset</button>
+    </div>
+  </section>
+
+  <section class="stats" id="stats" aria-live="polite">
+    <div class="stat">
+      <span class="stat-label">Open issues</span>
+      <strong class="stat-value" id="stat-open">0</strong>
+      <span class="stat-foot" id="stat-open-foot">0 complaints</span>
+    </div>
+    <div class="stat is-critical">
+      <span class="stat-label">Critical</span>
+      <strong class="stat-value" id="stat-critical">0</strong>
+      <span class="stat-foot">needs action today</span>
+    </div>
+    <div class="stat is-good">
+      <span class="stat-label">Resolved today</span>
+      <strong class="stat-value" id="stat-resolved">0</strong>
+      <span class="stat-foot" id="stat-resolved-foot">avg 0h to first action</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Oldest open</span>
+      <strong class="stat-value" id="stat-oldest">—</strong>
+      <span class="stat-foot" id="stat-oldest-foot">no pending issues</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Check accuracy</span>
+      <strong class="stat-value" id="stat-ai">—</strong>
+      <span class="stat-foot" id="stat-ai-foot">based on committee reviews</span>
+    </div>
+  </section>
+
+  <section class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="6.2"/><path d="m16 16 4.5 4.5"/></svg>
+      <input id="search" type="search" placeholder="Search issue / flat / keyword" autocomplete="off" />
+    </div>
+    <select id="sort" class="select-sm" aria-label="Sort issues">
+      <option value="urgency">Sort: Urgency, then oldest</option>
+      <option value="oldest">Sort: Oldest first</option>
+      <option value="newest">Sort: Newest first</option>
+      <option value="volume">Sort: Most residents affected</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" id="btn-clear-filters" type="button" hidden>Clear filters</button>
+    <span class="toolbar-spacer"></span>
+    <span class="sync-badge" id="sync-badge" title="Storage mode">Local</span>
+  </section>
+
+  <section class="filters" aria-label="Filters">
+    <div class="filter-row">
+      <span class="filter-label">Status</span>
+      <button class="chip chip-filter is-on" data-filter="status" data-value="all" type="button">All</button>
+      <button class="chip chip-filter" data-filter="status" data-value="New" type="button">New</button>
+      <button class="chip chip-filter" data-filter="status" data-value="Assigned" type="button">Assigned</button>
+      <button class="chip chip-filter" data-filter="status" data-value="In Progress" type="button">In Progress</button>
+      <button class="chip chip-filter" data-filter="status" data-value="Resolved" type="button">Resolved</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Category</span>
+      <button class="chip chip-filter is-on" data-filter="category" data-value="all" type="button">All</button>
+      <button class="chip chip-filter" data-filter="category" data-value="Water" type="button">Water</button>
+      <button class="chip chip-filter" data-filter="category" data-value="Lift" type="button">Lift</button>
+      <button class="chip chip-filter" data-filter="category" data-value="Parking" type="button">Parking</button>
+      <button class="chip chip-filter" data-filter="category" data-value="Cleaning" type="button">Cleaning</button>
+      <button class="chip chip-filter" data-filter="category" data-value="Security" type="button">Security</button>
+      <button class="chip chip-filter" data-filter="category" data-value="Other" type="button">Other</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Urgency</span>
+      <button class="chip chip-filter is-on" data-filter="urgency" data-value="all" type="button">All</button>
+      <button class="chip chip-filter" data-filter="urgency" data-value="Critical" type="button">Critical</button>
+      <button class="chip chip-filter" data-filter="urgency" data-value="High" type="button">High</button>
+      <button class="chip chip-filter" data-filter="urgency" data-value="Medium" type="button">Medium</button>
+      <button class="chip chip-filter" data-filter="urgency" data-value="Low" type="button">Low</button>
+      <span class="toolbar-spacer"></span>
+      <button class="chip chip-filter chip-warn" data-filter="clarity" data-value="1" type="button" title="Issues where the complaint could not be understood">Needs clarity</button>
+    </div>
+  </section>
+
+  <section class="board" id="board" aria-live="polite"></section>
+  <p class="muted small board-hint">Drag a card to another column to change status. Every change is logged with a timestamp.</p>
+</main>
+<footer class="site-foot">
+  <span>Samvaad · Committee board</span>
+</footer>
+
+<div class="modal-backdrop" id="modal-issue" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="issue-title">
+    <div id="issue-body"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-reply" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="reply-title">
+    <h3 id="reply-title">Suggested reply</h3>
+    <p class="muted small" id="reply-sub">Review and edit before sending. The draft is written in the language the residents used.</p>
+    <div class="row-gap wrap">
+      <select id="reply-lang" class="select-sm" aria-label="Reply language">
+        <option value="hinglish">Hinglish (Roman Hindi)</option>
+        <option value="hindi">हिन्दी (Devanagari)</option>
+        <option value="english">English</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" id="btn-regen" type="button">Regenerate</button>
+      <span class="toolbar-spacer"></span>
+      <span class="muted small" id="reply-count">0 characters</span>
+    </div>
+    <textarea id="reply-text" rows="6" placeholder="Suggested reply appears here…"></textarea>
+    <div class="row-between">
+      <button class="btn btn-ghost" id="btn-issue-from-reply" type="button">Back to issue</button>
+      <div class="row-gap wrap">
+        <button class="btn btn-secondary" id="btn-copy-reply" type="button">Copy text</button>
+        <a class="btn btn-wa" id="link-wa" href="#" target="_blank" rel="noopener">Send on WhatsApp</a>
+        <button class="btn btn-primary" id="btn-mark-sent" type="button">Mark as sent &amp; resolve</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-add" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title">
+    <h3 id="add-title">Paste a complaint</h3>
+    <p class="muted small">Got it on WhatsApp or in the society group? Paste it here in any language or spelling — it is sorted the same way.</p>
+    <div class="identity">
+      <label class="field field-sm"><span>Flat</span><input id="add-flat" type="text" placeholder="e.g. A-101"  /></label>
+      <label class="field field-sm"><span>Name</span><input id="add-name" type="text" placeholder="e.g. Sharma ji"  /></label>
+    </div>
+    <label class="field"><span>Message</span>
+      <textarea id="add-text" rows="4" placeholder="e.g. lift se awaz aa rahi hai aur ruk ruk ke chalta hai"></textarea>
+    </label>
+    <div class="row-between">
+      <span class="muted small">Runs sorting + duplicate check on save.</span>
+      <div class="row-gap">
+        <button class="btn btn-secondary" data-close type="button">Cancel</button>
+        <button class="btn btn-primary" id="btn-add-save" type="button">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="modal-backdrop" id="modal-gate" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-gate-title">
+    <h3 id="modal-gate-title">Committee access</h3>
+    <p class="muted small">This area is only for committee members. Enter the committee password to continue.</p>
+    <label class="field">
+      <span>Password</span>
+      <input id="in-gate" type="password" placeholder="Committee password" autocomplete="off" />
+    </label>
+    <div class="row-between">
+      <span></span>
+      <div class="row-gap">
+        <a class="btn btn-secondary" href="index.html">Back</a>
+        <button class="btn btn-primary" id="btn-gate-go" type="button">Open board</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-help" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-help-title">
+    <h3 id="modal-help-title">Help</h3>
+    <ul class="help-list">
+      <li><strong>Search</strong><span>Use the search box to find an issue.</span></li>
+      <li><strong>Move a card</strong><span>Drag a card to another column to change its status.</span></li>
+      <li><strong>Reply</strong><span>Open an issue, review the suggested reply, send it on WhatsApp.</span></li>
+    </ul>
+    <div class="row-between">
+      <span></span>
+      <button class="btn btn-primary" data-close type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.example.js"></script>
+<script src="js/config.js" onerror="window.__noLocalConfig=true"></script>
+<script src="vendor/firebase-app-compat.js" onerror="window.__noFirebaseSdk=true"></script>
+<script src="vendor/firebase-firestore-compat.js" onerror="window.__noFirebaseSdk=true"></script>
+<script src="js/ui.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/dashboard.js"></script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Local secrets - never commit your real keys
+js/config.js
+
+# OS / editor noise
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+*.log
